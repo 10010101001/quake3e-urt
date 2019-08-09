@@ -5127,7 +5127,7 @@ void FS_InitFilesystem( void ) {
 	
 #ifndef USE_AUTH
 	// mickael9: AUTH system requires fs_game to be set
-	if(!FS_FilenameCompare(Cvar_VariableString("fs_game"), com_basegame->string))
+	if(!FS_FilenameCompare(Cvar_VariableString("fs_game"), fs_basegame->string))
 		Cvar_Set("fs_game", "");
 #endif
 	
