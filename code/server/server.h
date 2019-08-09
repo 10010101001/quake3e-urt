@@ -268,6 +268,10 @@ typedef struct
 } serverBan_t;
 #endif
 
+#ifdef USE_AUTH
+	char auth[MAX_NAME_LENGTH];
+#endif
+
 //=============================================================================
 
 extern	serverStatic_t	svs;				// persistant server info across maps
@@ -301,6 +305,11 @@ extern	cvar_t	*sv_gametype;
 extern	cvar_t	*sv_pure;
 extern	cvar_t	*sv_floodProtect;
 extern	cvar_t	*sv_lanForceRate;
+ 
+#ifdef USE_AUTH
+extern	cvar_t	*sv_authServerIP;
+extern	cvar_t	*sv_auth_engine;
+#endif
 
 extern	cvar_t *sv_levelTimeReset;
 extern	cvar_t *sv_filter;
@@ -330,7 +339,10 @@ void SV_RemoveOperatorCommands( void );
 
 void SV_MasterShutdown( void );
 int SV_RateMsec( const client_t *client );
-
+// auth
+#ifdef USE_AUTH
+void SV_Auth_DropClient(client_t *drop, const char *reason, const char *message);
+#endif
 
 //
 // sv_init.c
