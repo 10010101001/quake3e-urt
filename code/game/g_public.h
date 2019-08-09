@@ -398,7 +398,14 @@ typedef enum {
 
 	// engine extensions
 	G_TRAP_GETVALUE = COM_TRAP_GETVALUE
-
+		
+#ifdef USE_AUTH
+	G_NET_STRINGTOADR = 600,
+	G_NET_SENDPACKET,
+	G_SYS_STARTPROCESS,
+	G_AUTH_DROP_CLIENT
+#endif
+		
 } gameImport_t;
 
 
@@ -438,5 +445,10 @@ typedef enum {
 	BOTAI_START_FRAME,				// ( int time );
 
 	GAME_EXPORT_LAST
+#ifdef USE_AUTH
+	GAME_AUTHSERVER_HEARTBEAT,
+	GAME_AUTHSERVER_SHUTDOWN,
+	GAME_AUTHSERVER_PACKET
+#endif
 } gameExport_t;
 

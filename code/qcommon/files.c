@@ -5124,7 +5124,13 @@ void FS_InitFilesystem( void ) {
 	Com_StartupVariable( "fs_copyfiles" );
 	Com_StartupVariable( "fs_restrict" );
 	Com_StartupVariable( "fs_locked" );
-
+	
+#ifndef USE_AUTH
+	// mickael9: AUTH system requires fs_game to be set
+	if(!FS_FilenameCompare(Cvar_VariableString("fs_game"), com_basegame->string))
+		Cvar_Set("fs_game", "");
+#endif
+	
 #ifdef _WIN32
  	_setmaxstdio( 2048 );
 #endif
