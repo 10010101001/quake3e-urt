@@ -75,6 +75,10 @@ ifeq ($(COMPILE_ARCH),x64)
   COMPILE_ARCH=x86_64
 endif
 
+ifndef USE_AUTH
+  USE_AUTH=1
+endif
+
 ifndef ARCH
 ARCH=$(COMPILE_ARCH)
 endif
