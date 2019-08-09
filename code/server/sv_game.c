@@ -105,6 +105,26 @@ static void SV_GameDropClient( int clientNum, const char *reason ) {
 	SV_DropClient( svs.clients + clientNum, reason );	
 }
 
+#ifdef USE_AUTH
+	sv_authServerIP = Cvar_Get("sv_authServerIP", "", CVAR_TEMP | CVAR_ROM);
+	sv_auth_engine = Cvar_Get("sv_auth_engine", "1", CVAR_ROM);
+#endif
+
+#ifdef USE_AUTH
+/*
+===============
+SV_Auth_GameDropClient
+
+Disconnects the client with a public reason and private message
+===============
+*/
+void SV_Auth_GameDropClient( int clientNum, const char *reason, const char *message ) {
+	if ( clientNum < 0 || clientNum >= sv_maxclients->integer ) {
+		return;
+	}
+	SV_Auth_DropClient( svs.clients + clientNum, reason, message );
+}
+#endif
 
 /*
 =================
@@ -137,7 +157,6 @@ static void SV_SetBrushModel( sharedEntity_t *ent, const char *name ) {
 
 	SV_LinkEntity( ent );		// FIXME: remove
 }
-
 
 /*
 =================
@@ -359,6 +378,7 @@ SV_GameSystemCalls
 The module is making a system call
 ====================
 */
+
 static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	switch( args[0] ) {
 	case G_PRINT:
@@ -386,6 +406,13 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 	case G_ARGC:
 		return Cmd_Argc();
+			
+#ifdef USE_AUTH
+		case G_AUTH_DROP_CLIENT:
+		SV_Auth_GameDropClient( args[1], VMA(2), VMA(3) );
+		return 0;
+#endif
+
 	case G_ARGV:
 		VM_CHECKBOUNDS( gvm, args[2], args[3] );
 		Cmd_ArgvBuffer( args[1], VMA(2), args[3] );
@@ -889,7 +916,25 @@ static intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return botlib_export->ai.GeneticParentsAndChildSelection(args[1], VMA(2), VMA(3), VMA(4), VMA(5));
 
 	// shared syscalls
+#ifdef USE_AUTH
+    case G_NET_STRINGTOADR:
+		return NET_StringToAdr(VMA(1), VMA(2), NA_IP);
 
+	case G_NET_SENDPACKET:
+		{
+			netadr_t addr;
+			const char * destination = VMA(4);
+
+			NET_StringToAdr(destination, &addr , NA_IP);
+			NET_SendPacket(args[1], args[2], VMA(3), addr);
+		}
+		return 0;
+
+	//case G_SYS_STARTPROCESS:
+	//	Sys_StartProcess( VMA(1), VMA(2) );
+	//	return 0;
+
+#endif
 	case TRAP_MEMSET:
 		VM_CHECKBOUNDS( gvm, args[1], args[3] );
 		Com_Memset( VMA(1), args[2], args[3] );
