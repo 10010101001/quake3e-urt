@@ -32,6 +32,10 @@ typedef struct {
 	char			servername[MAX_STRING_CHARS];
 	char			updateInfoString[MAX_STRING_CHARS];
 	char			messageString[MAX_STRING_CHARS];
+#ifdef USE_AUTH
+char            serverAddress[MAX_STRING_CHARS];
+#endif
+	
 } uiClientState_t;
 
 typedef enum {
@@ -132,7 +136,16 @@ typedef enum {
 	UI_R_ADDREFENTITYTOSCENE2,
 	UI_R_ADDLINEARLIGHTTOSCENE,
 	UI_TRAP_GETVALUE = COM_TRAP_GETVALUE,
-
+	
+#ifdef USE_AUTH
+	UI_NET_STRINGTOADR,
+	UI_Q_VSNPRINTF,
+	UI_NET_SENDPACKET,
+	UI_COPYSTRING,
+	UI_SYS_STARTPROCESS,
+    UI_NET_COMPAREBASEADR, // (== 93)
+#endif
+	
 } uiImport_t;
 
 typedef enum {

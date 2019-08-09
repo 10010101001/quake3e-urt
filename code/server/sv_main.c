@@ -54,6 +54,11 @@ cvar_t	*sv_pure;
 cvar_t	*sv_floodProtect;
 cvar_t	*sv_lanForceRate; // dedicated 1 (LAN) server forces local client rates to 99999 (bug #491)
 
+#ifdef USE_AUTH
+cvar_t	*sv_authServerIP;
+cvar_t	*sv_auth_engine;
+#endif
+
 cvar_t *sv_levelTimeReset;
 cvar_t *sv_filter;
 
@@ -252,7 +257,10 @@ static void SV_MasterHeartbeat( const char *message )
 		return;
 
 	svs.nextHeartbeatTime = svs.time + HEARTBEAT_MSEC;
-
+	
+#ifdef USE_AUTH
+	VM_Call( gvm, GAME_AUTHSERVER_HEARTBEAT );
+#endif
 	// send to group masters
 	for (i = 0; i < MAX_MASTER_SERVERS; i++)
 	{
@@ -339,6 +347,10 @@ void SV_MasterShutdown( void )
 
 	// when the master tries to poll the server, it won't respond, so
 	// it will be removed from the list
+#ifdef USE_AUTH
+	VM_Call( gvm, GAME_AUTHSERVER_SHUTDOWN );
+#endif
+
 }
 
 
@@ -684,6 +696,10 @@ static void SVC_Status( const netadr_t *from ) {
 	// echo back the parameter to status. so master servers can use it as a challenge
 	// to prevent timed spoofed reply packets that add ghost servers
 	Info_SetValueForKey( infostring, "challenge", Cmd_Argv( 1 ) );
+#ifdef USE_AUTH
+	Info_SetValueForKey( infostring, "auth", Cvar_VariableString("auth") );
+#endif
+
 
 	s = status;
 	status[0] = '\0';
@@ -900,7 +916,9 @@ connectionless packets.
 static void SV_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 	const char *s;
 	const char *c;
-
+#ifdef USE_AUTH
+	netadr_t	authServerIP;
+#endif
 	MSG_BeginReadingOOB( msg );
 	MSG_ReadLong( msg );		// skip the -1 marker
 
@@ -940,6 +958,15 @@ static void SV_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 		SV_GetChallenge( from );
 	} else if (!Q_stricmp(c, "connect")) {
 		SV_DirectConnect( from );
+#ifdef USE_AUTH
+	} else if ((!Q_stricmp(c, "AUTH:SV"))) {
+		NET_StringToAdr(sv_authServerIP->string, &authServerIP, NA_IP);
+		if (!NET_CompareBaseAdr(from, authServerIP)) {
+			Com_Printf("AUTH not from the Auth Server!\n");
+			return;
+		}
+		VM_Call(gvm, GAME_AUTHSERVER_PACKET);
+#endif
 #ifndef STANDALONE
 	} else if (!Q_stricmp(c, "ipAuthorize")) {
 		// removed from codebase since stateless challenges
@@ -954,6 +981,7 @@ static void SV_ConnectionlessPacket( const netadr_t *from, msg_t *msg ) {
 				NET_AdrToString( from ), s );
 		}
 	}
+
 }
 
 //============================================================================
